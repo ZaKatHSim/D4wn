@@ -28,7 +28,7 @@ def vs():
 
             for key in request.form:
                 if key.endswith("_score_lunes"):
-                    username = key.split("_score_lunes")[0]
+                    username = key.split("_score_")[0]
                     for i, dia_nombre in enumerate(dias_texto):
                         puntuacion = request.form.get(f"{username}_score_{dia_nombre}")
                         if puntuacion is not None:

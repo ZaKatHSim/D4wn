@@ -25,12 +25,9 @@
         th {
             background-color: #222;
         }
-        input[type="number"], select {
-            width: 150px;
-            background-color: #222;
-            color: white;
-            border: 1px solid #444;
-            padding: 5px;
+        .fecha-container {
+            text-align: center;
+            margin-bottom: 20px;
         }
         button {
             display: block;
@@ -43,10 +40,6 @@
         }
         button:hover {
             background-color: #555;
-        }
-        .fecha-container {
-            text-align: center;
-            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -62,7 +55,7 @@
     <form method="POST" action="/vs">
         <div class="fecha-container">
             <label>Mes:</label>
-            <select name="mes" id="mes" required onchange="updateLunes()">
+            <select name="mes" id="mes" required>
                 <option value="01" {% if mes_seleccionado == "01" %}selected{% endif %}>Enero</option>
                 <option value="02" {% if mes_seleccionado == "02" %}selected{% endif %}>Febrero</option>
                 <option value="03" {% if mes_seleccionado == "03" %}selected{% endif %}>Marzo</option>
@@ -76,75 +69,42 @@
                 <option value="11" {% if mes_seleccionado == "11" %}selected{% endif %}>Noviembre</option>
                 <option value="12" {% if mes_seleccionado == "12" %}selected{% endif %}>Diciembre</option>
             </select>
-            <label>Lunes:</label>
-            <select name="dia" id="dia" required>
-                <option value="">--</option>
-            </select>
-<button type="submit" class="ml-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Aceptar</button>
-        </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Miembro</th>
-                    <th>Puntuaciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for username, rank in members %}
-                    <tr>
-                        <td>{{ username }} ({{ rank }})</td>
-                        <td>
-                            {% for i in range(5) %}
-                                {% set fecha = semana_fechas[i].strftime('%d/%m/%Y') %}
-                                {% set fecha_key = semana_fechas[i].strftime('%Y-%m-%d') %}
-                                {% set dia_nombre = ["lunes", "martes", "miercoles", "jueves", "viernes"][i] %}
-                                <div>
-                                    <label>{{ dia_nombre|capitalize }} ({{ fecha }})</label>
-                                    <input type="text"
-       name="{{ username }}_score_{{ dia_nombre }}"
-       maxlength="14"
-       class="w-full px-3 py-1.5 text-xl font-mono text-right text-green-400 bg-black border border-green-500 rounded-md placeholder-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
-       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,14);"
-       placeholder="0"
-       value="{{ puntuaciones.get((username, fecha_key), 0) or 0 }}" />
-                                </div>
-                            {% endfor %}
-                        </td>
-                    </tr>
+            <label>Día (lunes):</label>
+            <select name="dia" id="dia" required>
+                {% for i in range(1, 32) %}
+                    <option value="{{ "%02d"|format(i) }}" {% if dia_seleccionado == "%02d"|format(i) %}selected{% endif %}>
+                        {{ "%02d"|format(i) }}
+                    </option>
                 {% endfor %}
-            </tbody>
-        </table>
-        <button type="submit">Guardar Puntuaciones</button>
+            </select>
+
+            <button type="submit">Aceptar</button>
+        </div>
     </form>
 
-    <script>
-        // Llenar los días de la semana dependiendo del mes seleccionado
-        function updateLunes() {
-            const diaSelect = document.getElementById("dia");
-            const mes = document.getElementById("mes").value;
-            diaSelect.innerHTML = "<option value=''>--</option>"; // Resetear el contenido
-
-            if (!mes) return;
-
-            const year = 2025; // Cambiar a año dinámico si es necesario
-            const diasEnMes = new Date(year, mes, 0).getDate();
-
-            // Rellenar los lunes del mes
-            for (let d = 1; d <= diasEnMes; d++) {
-                const fecha = new Date(`${year}-${mes}-${d < 10 ? '0' + d : d}`);
-                if (fecha.getDay() === 1) { // Si es lunes
-                    const diaFormateado = d < 10 ? '0' + d : d;
-                    const option = document.createElement("option");
-                    option.value = diaFormateado;
-                    option.text = diaFormateado;
-                    diaSelect.appendChild(option);
-                }
-            }
-        }
-
-        // Ejecutar al cargar la página para inicializar los días
-        document.addEventListener("DOMContentLoaded", updateLunes);
-    </script>
+    <table>
+        <thead>
+            <tr>
+                <th>Miembro</th>
+                {% for fecha in semana_fechas %}
+                    <th>{{ fecha.strftime('%A %d/%m/%Y') }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario, rango in members %}
+            <tr>
+                <td>{{ usuario }}</td>
+                {% for fecha in semana_fechas %}
+                    {% set fecha_str = fecha.strftime('%Y-%m-%d') %}
+                    <td>
+                        <input type="number" name="{{ usuario }}_score_{{ fecha.strftime('A').lower() }}" value="{{ puntuaciones[(usuario, fecha_str)] if (usuario, fecha_str) in puntuaciones else 0 }}">
+                    </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>
