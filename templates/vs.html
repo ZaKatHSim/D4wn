@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Versus - Ingresar Puntuaciones</title>
+    <style>
+        body {
+            background-color: #000;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        table {
+            width: 90%;
+            margin: 30px auto;
+            border-collapse: collapse;
+            background-color: #111;
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #222;
+        }
+        input[type="number"], select {
+            width: 150px;
+            background-color: #222;
+            color: white;
+            border: 1px solid #444;
+            padding: 5px;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #444;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        .fecha-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div style="text-align: left; margin: 10px;">
+        <a href="{{ url_for('dashboard') }}">
+            <button>⬅ Volver al panel</button>
+        </a>
+    </div>
+
+    <h1 style="text-align: center;">Versus - Ingresar Puntuaciones</h1>
+
+    <form method="POST" action="/vs">
+        <div class="fecha-container">
+            <label>Mes:</label>
+            <select name="mes" id="mes" required onchange="updateLunes()">
+                <option value="01" {% if mes_seleccionado == "01" %}selected{% endif %}>Enero</option>
+                <option value="02" {% if mes_seleccionado == "02" %}selected{% endif %}>Febrero</option>
+                <option value="03" {% if mes_seleccionado == "03" %}selected{% endif %}>Marzo</option>
+                <option value="04" {% if mes_seleccionado == "04" %}selected{% endif %}>Abril</option>
+                <option value="05" {% if mes_seleccionado == "05" %}selected{% endif %}>Mayo</option>
+                <option value="06" {% if mes_seleccionado == "06" %}selected{% endif %}>Junio</option>
+                <option value="07" {% if mes_seleccionado == "07" %}selected{% endif %}>Julio</option>
+                <option value="08" {% if mes_seleccionado == "08" %}selected{% endif %}>Agosto</option>
+                <option value="09" {% if mes_seleccionado == "09" %}selected{% endif %}>Septiembre</option>
+                <option value="10" {% if mes_seleccionado == "10" %}selected{% endif %}>Octubre</option>
+                <option value="11" {% if mes_seleccionado == "11" %}selected{% endif %}>Noviembre</option>
+                <option value="12" {% if mes_seleccionado == "12" %}selected{% endif %}>Diciembre</option>
+            </select>
+            <label>Lunes:</label>
+            <select name="dia" id="dia" required>
+                <option value="">--</option>
+            </select>
+<button type="submit" class="ml-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Aceptar</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Miembro</th>
+                    <th>Puntuaciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for username, rank in members %}
+                    <tr>
+                        <td>{{ username }} ({{ rank }})</td>
+                        <td>
+                            {% for i in range(5) %}
+                                {% set fecha = semana_fechas[i].strftime('%d/%m/%Y') %}
+                                {% set fecha_key = semana_fechas[i].strftime('%Y-%m-%d') %}
+                                {% set dia_nombre = ["lunes", "martes", "miercoles", "jueves", "viernes"][i] %}
+                                <div>
+                                    <label>{{ dia_nombre|capitalize }} ({{ fecha }})</label>
+                                    <input type="text"
+       name="{{ username }}_score_{{ dia_nombre }}"
+       maxlength="14"
+       class="w-full px-3 py-1.5 text-xl font-mono text-right text-green-400 bg-black border border-green-500 rounded-md placeholder-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,14);"
+       placeholder="0"
+       value="{{ puntuaciones.get((username, fecha_key), 0) or 0 }}" />
+                                </div>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit">Guardar Puntuaciones</button>
+    </form>
+
+    <script>
+        // Llenar los días de la semana dependiendo del mes seleccionado
+        function updateLunes() {
+            const diaSelect = document.getElementById("dia");
+            const mes = document.getElementById("mes").value;
+            diaSelect.innerHTML = "<option value=''>--</option>"; // Resetear el contenido
+
+            if (!mes) return;
+
+            const year = 2025; // Cambiar a año dinámico si es necesario
+            const diasEnMes = new Date(year, mes, 0).getDate();
+
+            // Rellenar los lunes del mes
+            for (let d = 1; d <= diasEnMes; d++) {
+                const fecha = new Date(`${year}-${mes}-${d < 10 ? '0' + d : d}`);
+                if (fecha.getDay() === 1) { // Si es lunes
+                    const diaFormateado = d < 10 ? '0' + d : d;
+                    const option = document.createElement("option");
+                    option.value = diaFormateado;
+                    option.text = diaFormateado;
+                    diaSelect.appendChild(option);
+                }
+            }
+        }
+
+        // Ejecutar al cargar la página para inicializar los días
+        document.addEventListener("DOMContentLoaded", updateLunes);
+    </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<style>
+    table {
+        width: 90%;
+        margin: 0 auto 30px auto;
+        border-collapse: collapse;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 16px;
+        background-color: #111;
+        color: white;
+        box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+    th, td {
+        padding: 10px 15px;
+        border: 1px solid #333;
+        text-align: center;
+    }
+    th {
+        background-color: #222;
+        cursor: pointer;
+    }
+    tr:nth-child(even) {
+        background-color: #1a1a1a;
+    }
+    tr:hover {
+        background-color: #2a2a2a;
+    }
+</style>
+
+<meta charset="utf-8"/>
+<title>Registrar miembro</title>
+<style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        .form-column {
+            width: 45%;
+            padding: 40px;
+            box-sizing: border-box;
+            border-right: 1px solid #333;
+        }
+
+        .list-column {
+            width: 55%;
+            padding: 40px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        h1, h2 {
+            color: #6df;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input, select {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: white;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #ccc;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #6df;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #444;
+        }
+
+        th {
+            color: #aaa;
+        }
+
+        a {
+            color: #6df;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+<script>
+        function sortTable(colIndex) {
+            const table = document.querySelector("table tbody");
+            const rows = Array.from(table.querySelectorAll("tr"));
+            const ascending = table.getAttribute("data-sort") !== "asc";
+
+            rows.sort((a, b) => {
+                const valA = a.children[colIndex].innerText.toLowerCase();
+                const valB = b.children[colIndex].innerText.toLowerCase();
+                if (valA < valB) return ascending ? -1 : 1;
+                if (valA > valB) return ascending ? 1 : -1;
+                return 0;
+            });
+
+            rows.forEach(row => table.appendChild(row));
+            table.setAttribute("data-sort", ascending ? "asc" : "desc");
+        }
+    </script>
+</head>
+<body>
+<div class="form-column">
+<h1>Registrar nuevo miembro</h1>
+<form method="POST">
+<input name="username" placeholder="Nombre de usuario" required="" type="text"/>
+<input name="password" placeholder="Contraseña" required="" type="password"/>
+<select name="rank" required="">
+<option value="">Selecciona un rango</option>
+<option value="R1">R1</option>
+<option value="R2">R2</option>
+<option value="R3">R3</option>
+<option value="R4">R4</option>
+<option value="R5">R5</option>
+</select>
+<button type="submit">Registrar</button>
+</form>
+        {% if message %}
+            <div class="message">{{ message }}</div>
+        {% endif %}
+        <br/><a href="{{ url_for('dashboard') }}" style="color:#ccc;">⟵ Volver al panel</a>
+</div>
+<div class="list-column">
+<h2>Miembros actuales</h2>
+<div style="display: flex; justify-content: center; margin-bottom: 20px;">
+<input id="searchInput" onblur="this.style.boxShadow='0 0 5px rgba(255,255,255,0.1)'" onfocus="this.style.boxShadow='0 0 8px rgba(255,255,255,0.3)'" placeholder="Search by username or rank..." style="padding: 12px 20px; width: 60%; max-width: 500px;
+               border: 1px solid #555; border-radius: 12px;
+               background-color: #1a1a1a; color: #fff;
+               font-size: 16px; transition: 0.3s ease-in-out;
+               box-shadow: 0 0 5px rgba(255,255,255,0.1);" type="text"/>
+</div>
+
+<table>
+<thead>
+<tr>
+<th onclick="sortTable(0)" style="cursor:pointer;">Usuario 🔃</th>
+<th onclick="sortTable(1)" style="cursor:pointer;">Rango 🔃</th>
+<th>Acciones</th>
+</tr>
+</thead>
+<tbody>
+    {% for user in usuarios %}
+    <tr>
+        <td>{{ user[1] }}</td>
+        <td style="{% if user[3] == 'R5' %}color: #ff5555;
+                    {% elif user[3] == 'R4' %}color: #5599ff;
+                    {% elif user[3] in ['R3', 'R2', 'R1'] %}color: #cccccc;
+                    {% else %}color: white;
+                    {% endif %} font-weight: bold;">
+            {{ user[3] }}
+        </td>
+        <td>
+            <a href="{{ url_for('editar_usuario', user_id=user[0]) }}">✏️ Editar</a>
+            <a href="{{ url_for('borrar_usuario', user_id=user[0]) }}">🗑 Borrar</a>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+</table>
+
+</div>
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function() {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("table tbody tr");
+    rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+    });
+});
+</script>
+</body>
+</html>
